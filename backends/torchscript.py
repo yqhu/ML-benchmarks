@@ -9,7 +9,10 @@ from backends.ort import benchmark_ORT
 from transformers import AutoModel, TensorType
 from utils.utils import get_dummy_inputs, get_dummy_inputs, csv_writer, SEC_TO_MS_SCALE
 import csv
-def benchmark_Torchscript(model_path, batch_size,sequence_length, backend, output_folder, duration):
+
+def benchmark_Torchscript(model_path, batch_size,sequence_length, backend, output_folder, duration, num_threads=-1):
+    if num_threads > 0:
+        torch.set_num_threads(num_threads)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     tokenizer = BertTokenizerFast.from_pretrained("bert-base-cased")

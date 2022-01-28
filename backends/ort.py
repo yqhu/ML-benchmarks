@@ -21,9 +21,17 @@ import torch
 from transformers import TensorType
 from utils.utils import get_dummy_inputs, get_dummy_inputs, csv_writer, SEC_TO_MS_SCALE
 import csv 
+import multiprocessing as mp
 
-def benchmark_ORT(model_path, batch_size,sequence_length, backend, output_folder, duration):
-    model = onnxruntime.InferenceSession(model_path)   
+
+def benchmark_ORT(model_path, batch_size,sequence_length, backend, output_folder, duration, num_threads=-1):
+    if num_threads < 0:
+        num_threads = mp.cpu_count()
+    sess_options = onnxruntime.SessionOptions()
+    sess_options.intra_op_num_threads = num_threads
+    sess_options.inter_op_num_threads = num_threads
+
+    model = onnxruntime.InferenceSession(model_path, sess_options=sess_options)   
 
     tokenizer = BertTokenizerFast.from_pretrained("bert-base-cased")
     # model_inputs = tokenizer("My name is Bert", return_tensors="pt")
