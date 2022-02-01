@@ -25,7 +25,7 @@ import csv
 import multiprocessing as mp
 
 
-def benchmark_Eager(model_path, batch_size, sequence_length, backend, output_folder, duration, num_threads=-1):
+def benchmark_Eager(model_path, batch_size, sequence_length, backend, output_folder, duration, num_threads=-1, gpu=False):
     if num_threads < 0:
         num_threads = mp.cpu_count()
 
@@ -36,6 +36,11 @@ def benchmark_Eager(model_path, batch_size, sequence_length, backend, output_fol
 
     inputs = torch.rand((batch_size, 3, sequence_length, sequence_length))
 
+    if gpu:
+        device = torch.device('cuda')
+        model = model.to(device)
+        inputs = inputs.to(device)
+
     latencies = []
 
     # Warmup
@@ -71,7 +76,7 @@ def benchmark_Eager(model_path, batch_size, sequence_length, backend, output_fol
     return bechmark_metrics
     
 
-def benchmark_TorchScript(model_path, batch_size, sequence_length, backend, output_folder, duration, num_threads=-1):
+def benchmark_TorchScript(model_path, batch_size, sequence_length, backend, output_folder, duration, num_threads=-1, gpu=False):
     if num_threads < 0:
         num_threads = mp.cpu_count()
 
@@ -82,6 +87,11 @@ def benchmark_TorchScript(model_path, batch_size, sequence_length, backend, outp
 
     inputs = torch.rand((batch_size, 3, sequence_length, sequence_length))
 
+    if gpu:
+        device = torch.device('cuda')
+        model = model.to(device)
+        inputs = inputs.to(device)
+
     latencies = []
 
     # Warmup
@@ -116,7 +126,7 @@ def benchmark_TorchScript(model_path, batch_size, sequence_length, backend, outp
     }
     return bechmark_metrics
     
-def benchmark_OFI(model_path, batch_size, sequence_length, backend, output_folder, duration, num_threads=-1):
+def benchmark_OFI(model_path, batch_size, sequence_length, backend, output_folder, duration, num_threads=-1, gpu=False):
     if num_threads < 0:
         num_threads = mp.cpu_count()
 
@@ -126,6 +136,11 @@ def benchmark_OFI(model_path, batch_size, sequence_length, backend, output_folde
     model = torch.jit.optimize_for_inference(model.eval())
 
     inputs = torch.rand((batch_size, 3, sequence_length, sequence_length))
+
+    if gpu:
+        device = torch.device('cuda')
+        model = model.to(device)
+        inputs = inputs.to(device)
 
     latencies = []
 
@@ -169,7 +184,7 @@ def benchmark_CV_ORT(model_path, batch_size, sequence_length, backend, output_fo
     sess_options.intra_op_num_threads = num_threads
     sess_options.inter_op_num_threads = num_threads
 
-    model = onnxruntime.InferenceSession(model_path, sess_options=sess_options)   
+    model = onnxruntime.InferenceSession(model_path, sess_options=sess_options, providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])   
 
     inputs = torch.rand((batch_size, 3, sequence_length, sequence_length))
     inputs = {'input': inputs.numpy()}
