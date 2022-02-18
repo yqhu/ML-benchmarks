@@ -68,5 +68,6 @@ if __name__ == '__main__':
         cols.remove('throughput')
         df[cols] /= len(ret)
 
-        file_name = os.path.join(args.output_path, f"resutls_{args.backend}.csv")
+        gpu = '_gpu' if args.gpu else ''
+        file_name = os.path.join(args.output_path, f"resutls_{args.backend}{gpu}.csv")
         df.to_csv(file_name, index=False)

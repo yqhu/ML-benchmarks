@@ -47,7 +47,7 @@ def benchmark_Torchscript(model_path, batch_size,sequence_length, backend, outpu
         "sequence_length": sequence_length,
         "latency_mean": np.mean(latencies),
         "latency_std": np.std(latencies),
-        "throughput":round(duration * batch_size / np.sum(latencies), 2),
+        "throughput":round(duration * batch_size * SEC_TO_MS_SCALE / np.sum(latencies), 2),
         "latency_50": np.quantile(latencies, 0.5),
         "latency_90": np.quantile(latencies, 0.9),
         "latency_95": np.quantile(latencies, 0.95),
