@@ -1,9 +1,9 @@
 # Examples for using ML-benchmarks
-Examples are based on https://huggingface.co/docs/transformers/serialization
+Transformer examples are based on https://huggingface.co/docs/transformers/serialization
 
 ## Install dependencies
 
-    pip install transformers datasets onnx onnxruntime coloredlogs lightseq onnxruntime_tools
+    pip install transformers datasets onnx onnxruntime-gpu coloredlogs lightseq
 
 ## Prepare ONNX model
 
@@ -13,13 +13,13 @@ Examples are based on https://huggingface.co/docs/transformers/serialization
 
     python export_ts.py
 
-## Benchmark ORT model
+## Benchmark Bert model, ORT mode
 The commoand below will create `resutls_ort.csv`:
 
     python benchmark_runs.py --model_path model.onnx --backend ort --output_path . --batch_sizes 1 2 --sequence_lengths 32
     python benchmark_runs.py --model_path model.onnx --backend ort --output_path . --batch_sizes 1 2 --sequence_lengths 32 --gpu
 
-## Benchmark TorchScript model
+## Benchmark Bert model, TorchScript mode
 The command below will create `resutls_torchscript.csv`:
 
     python benchmark_runs.py --model_path model.pt --backend torchscript --output_path . --batch_sizes 1 2 --sequence_lengths 32
