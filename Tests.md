@@ -27,19 +27,23 @@ The command below will create `resutls_torchscript.csv`:
 
 ## Benchmark CV model, eager mode
 The command below will create `resutls_cv_eager.csv`:
+
     python benchmark_runs.py --model_path cv_eager.pt --backend cv_eager --output_path . --batch_sizes 1 2 --sequence_lengths 224
     python benchmark_runs.py --model_path cv_eager.pt --backend cv_eager --output_path . --batch_sizes 1 2 --sequence_lengths 224 --gpu
 
 ## Benchmark CV model, torchscript mode
 The command below will create `resutls_cv_torchscript.csv`:
+
     python benchmark_runs.py --model_path cv_ts.pt --backend cv_torchscript --output_path . --batch_sizes 1 2 --sequence_lengths 224
     python benchmark_runs.py --model_path cv_ts.pt --backend cv_torchscript --output_path . --batch_sizes 1 2 --sequence_lengths 224 --gpu
 
 ## Benchmark CV model, ORT mode
 The command below will create `resutls_cv_ort.csv`:
+
     python benchmark_runs.py --model_path cv_onnx.onnx --backend cv_ort --output_path . --batch_sizes 1 2 --sequence_lengths 224
     python benchmark_runs.py --model_path cv_onnx.onnx --backend cv_ort --output_path . --batch_sizes 1 2 --sequence_lengths 224 --gpu
 
 ## Benchmark CV model, optimize_for_inference mode
 The command below will create `resutls_cv_ofi.csv`:
+
     python benchmark_runs.py --model_path cv_ts.pt --backend cv_ofi --output_path . --batch_sizes 1 2 --sequence_lengths 224
