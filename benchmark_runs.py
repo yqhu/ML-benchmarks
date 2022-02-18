@@ -14,7 +14,7 @@ def run_worker(args):
     for batch_size in args.batch_sizes:
         for sequence_length in args.sequence_lengths:
             if args.backend == 'ort':
-                benchmarks_list.append(benchmark_ORT(args.model_path, batch_size,sequence_length, args.backend, args.output_path, args.duration, num_threads=args.num_threads))
+                benchmarks_list.append(benchmark_ORT(args.model_path, batch_size,sequence_length, args.backend, args.output_path, args.duration, num_threads=args.num_threads, gpu=args.gpu))
                 #csv_writer(benchmarks_list, args.backend, args.output_path)
             elif args.backend == 'torchscript':
                 benchmarks_list.append(benchmark_Torchscript(args.model_path, batch_size,sequence_length, args.backend, args.output_path, args.duration, num_threads=args.num_threads, gpu=args.gpu))
@@ -26,10 +26,9 @@ def run_worker(args):
             elif args.backend == 'cv_ofi':
                 benchmarks_list.append(benchmark_OFI(args.model_path, batch_size, sequence_length, args.backend, args.output_path, args.duration, num_threads=args.num_threads, gpu=args.gpu))
             elif args.backend == 'cv_ort':
-                benchmarks_list.append(benchmark_CV_ORT(args.model_path, batch_size, sequence_length, args.backend, args.output_path, args.duration, num_threads=args.num_threads))
-            elif args.backend == 'lightseq':
-                benchmarks_list.append(benchmark_LightSeq(args.model_path, batch_size,sequence_length, args.backend, args.output_path, args.duration))
-                #csv_writer(benchmarks_list, args.backend, args.output_path)  
+                benchmarks_list.append(benchmark_CV_ORT(args.model_path, batch_size, sequence_length, args.backend, args.output_path, args.duration, num_threads=args.num_threads, gpu=args.gpu))
+            else:
+                pass
 
     return benchmarks_list
 
@@ -37,7 +36,7 @@ def run_worker(args):
 if __name__ == '__main__':
     parser = ArgumentParser("Model benchmarking")
     parser.add_argument("--model_path", type=str, help="The path to the trained/optimzied model")
-    parser.add_argument("--duration", type=str, help="duration of benchmark run")
+    parser.add_argument("--duration", type=int, default=1000, help="cycles of benchmark run")
     parser.add_argument("--backend", type=str, help="Backend, torchscript, ort, or lightseq")
     parser.add_argument("--output_path", type=str, help="Where the resulting report will be saved")
     parser.add_argument("--profile", type=bool, help="flag to profile the model")

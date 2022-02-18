@@ -1,7 +1,7 @@
 from pathlib import Path
 from transformers.convert_graph_to_onnx import convert
-from onnxruntime_tools import optimizer
-from onnxruntime_tools.transformers.onnx_model_bert import BertOptimizationOptions
+# from onnxruntime_tools import optimizer
+# from onnxruntime_tools.transformers.onnx_model_bert import BertOptimizationOptions
 from transformers import BertTokenizerFast
 import onnxruntime
 

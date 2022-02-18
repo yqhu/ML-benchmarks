@@ -24,14 +24,19 @@ import csv
 import multiprocessing as mp
 
 
-def benchmark_ORT(model_path, batch_size,sequence_length, backend, output_folder, duration, num_threads=-1):
+def benchmark_ORT(model_path, batch_size,sequence_length, backend, output_folder, duration=1000, num_threads=-1, gpu=False):
     if num_threads < 0:
         num_threads = mp.cpu_count()
     sess_options = onnxruntime.SessionOptions()
     sess_options.intra_op_num_threads = num_threads
     sess_options.inter_op_num_threads = num_threads
 
-    model = onnxruntime.InferenceSession(model_path, sess_options=sess_options)   
+    
+    if gpu and torch.cuda.is_available():
+        providers = ['CUDAExecutionProvider', 'CPUExecutionProvider']
+    else:
+        providers = ['CPUExecutionProvider']
+    model = onnxruntime.InferenceSession(model_path, sess_options=sess_options, providers=providers)   
 
     tokenizer = BertTokenizerFast.from_pretrained("bert-base-cased")
     # model_inputs = tokenizer("My name is Bert", return_tensors="pt")
@@ -51,22 +56,21 @@ def benchmark_ORT(model_path, batch_size,sequence_length, backend, output_folder
     # Warmup
     for _ in range(10):
         _ = model.run(None, inputs)
-
-    duration = (int(duration) * SEC_TO_MS_SCALE)
     
-    while sum(latencies) < duration:
+    for _ in range(duration):
         start_time = perf_counter()
         _ = model.run(None, inputs)
         latency = (perf_counter() - start_time)*SEC_TO_MS_SCALE
         latencies.append(latency)
-        # Compute run statistics
-    print("*******", len(latencies), sum(latencies))
+    
+    # Compute run statistics
+    print(f"******* batch_size = {batch_size}, sequence_length = {sequence_length}, {sum(latencies)} ms / {duration} iters")
     bechmark_metrics={
         "batchsize":batch_size,
         "sequence_length": sequence_length,
         "latency_mean": np.mean(latencies),
         "latency_std": np.std(latencies),
-        "throughput":round(((len(latencies)/duration)*batch_size)*SEC_TO_MS_SCALE,2),
+        "throughput":round(duration * batch_size / np.sum(latencies), 2),
         "latency_50": np.quantile(latencies, 0.5),
         "latency_90": np.quantile(latencies, 0.9),
         "latency_95": np.quantile(latencies, 0.95),

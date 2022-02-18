@@ -48,11 +48,9 @@ def benchmark_Eager(model_path, batch_size, sequence_length, backend, output_fol
         for _ in range(10):
             # _ = model.run(None, inputs)
             _ = model(inputs)
-
-    duration = (int(duration) * SEC_TO_MS_SCALE)
     
     with torch.inference_mode():
-        while sum(latencies) < duration:
+        for _ in range(duration):
             start_time = perf_counter()
             # _ = model.run(None, inputs)
             _ = model(inputs)
@@ -60,13 +58,13 @@ def benchmark_Eager(model_path, batch_size, sequence_length, backend, output_fol
             latencies.append(latency)
         
     # Compute run statistics
-    print("*******", len(latencies), sum(latencies))
+    print(f"******* batch_size = {batch_size}, sequence_length = {sequence_length}, {sum(latencies)} ms / {duration} iters")
     bechmark_metrics={
         "batchsize":batch_size,
         "sequence_length": sequence_length,
         "latency_mean": np.mean(latencies),
         "latency_std": np.std(latencies),
-        "throughput":round(((len(latencies)/duration)*batch_size)*SEC_TO_MS_SCALE,2),
+        "throughput":round(duration * batch_size / np.sum(latencies), 2),
         "latency_50": np.quantile(latencies, 0.5),
         "latency_90": np.quantile(latencies, 0.9),
         "latency_95": np.quantile(latencies, 0.95),
@@ -99,11 +97,9 @@ def benchmark_TorchScript(model_path, batch_size, sequence_length, backend, outp
         for _ in range(10):
             # _ = model.run(None, inputs)
             _ = model(inputs)
-
-    duration = (int(duration) * SEC_TO_MS_SCALE)
     
     with torch.inference_mode():
-        while sum(latencies) < duration:
+        for _ in range(duration):
             start_time = perf_counter()
             # _ = model.run(None, inputs)
             _ = model(inputs)
@@ -111,13 +107,13 @@ def benchmark_TorchScript(model_path, batch_size, sequence_length, backend, outp
             latencies.append(latency)
         
     # Compute run statistics
-    print("*******", len(latencies), sum(latencies))
+    print(f"******* batch_size = {batch_size}, sequence_length = {sequence_length}, {sum(latencies)} ms / {duration} iters")
     bechmark_metrics={
         "batchsize":batch_size,
         "sequence_length": sequence_length,
         "latency_mean": np.mean(latencies),
         "latency_std": np.std(latencies),
-        "throughput":round(((len(latencies)/duration)*batch_size)*SEC_TO_MS_SCALE,2),
+        "throughput":round(duration * batch_size / np.sum(latencies), 2),
         "latency_50": np.quantile(latencies, 0.5),
         "latency_90": np.quantile(latencies, 0.9),
         "latency_95": np.quantile(latencies, 0.95),
@@ -149,11 +145,9 @@ def benchmark_OFI(model_path, batch_size, sequence_length, backend, output_folde
         for _ in range(10):
             # _ = model.run(None, inputs)
             _ = model(inputs)
-
-    duration = (int(duration) * SEC_TO_MS_SCALE)
     
     with torch.inference_mode():
-        while sum(latencies) < duration:
+        for _ in range(duration):
             start_time = perf_counter()
             # _ = model.run(None, inputs)
             _ = model(inputs)
@@ -161,13 +155,13 @@ def benchmark_OFI(model_path, batch_size, sequence_length, backend, output_folde
             latencies.append(latency)
         
     # Compute run statistics
-    print("*******", len(latencies), sum(latencies))
+    print(f"******* batch_size = {batch_size}, sequence_length = {sequence_length}, {sum(latencies)} ms / {duration} iters")
     bechmark_metrics={
         "batchsize":batch_size,
         "sequence_length": sequence_length,
         "latency_mean": np.mean(latencies),
         "latency_std": np.std(latencies),
-        "throughput":round(((len(latencies)/duration)*batch_size)*SEC_TO_MS_SCALE,2),
+        "throughput":round(duration * batch_size / np.sum(latencies), 2),
         "latency_50": np.quantile(latencies, 0.5),
         "latency_90": np.quantile(latencies, 0.9),
         "latency_95": np.quantile(latencies, 0.95),
@@ -176,7 +170,7 @@ def benchmark_OFI(model_path, batch_size, sequence_length, backend, output_folde
     }
     return bechmark_metrics
     
-def benchmark_CV_ORT(model_path, batch_size, sequence_length, backend, output_folder, duration, num_threads=-1):
+def benchmark_CV_ORT(model_path, batch_size, sequence_length, backend, output_folder, duration, num_threads=-1, gpu=False):
     if num_threads < 0:
         num_threads = mp.cpu_count()
 
@@ -184,7 +178,11 @@ def benchmark_CV_ORT(model_path, batch_size, sequence_length, backend, output_fo
     sess_options.intra_op_num_threads = num_threads
     sess_options.inter_op_num_threads = num_threads
 
-    model = onnxruntime.InferenceSession(model_path, sess_options=sess_options, providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])   
+    if gpu and torch.cuda.is_available():
+        providers = ['CUDAExecutionProvider', 'CPUExecutionProvider']
+    else:
+        providers = ['CPUExecutionProvider']
+    model = onnxruntime.InferenceSession(model_path, sess_options=sess_options, providers=providers)   
 
     inputs = torch.rand((batch_size, 3, sequence_length, sequence_length))
     inputs = {'input': inputs.numpy()}
@@ -194,8 +192,6 @@ def benchmark_CV_ORT(model_path, batch_size, sequence_length, backend, output_fo
     # Warmup
     for _ in range(10):
         _ = model.run(None, inputs)
-
-    duration = (int(duration) * SEC_TO_MS_SCALE)
     
     with torch.inference_mode():
         while sum(latencies) < duration:
@@ -205,13 +201,13 @@ def benchmark_CV_ORT(model_path, batch_size, sequence_length, backend, output_fo
             latencies.append(latency)
         
     # Compute run statistics
-    print("*******", len(latencies), sum(latencies))
+    print(f"******* batch_size = {batch_size}, sequence_length = {sequence_length}, {sum(latencies)} ms / {duration} iters")
     bechmark_metrics={
         "batchsize":batch_size,
         "sequence_length": sequence_length,
         "latency_mean": np.mean(latencies),
         "latency_std": np.std(latencies),
-        "throughput":round(((len(latencies)/duration)*batch_size)*SEC_TO_MS_SCALE,2),
+        "throughput":round(duration * batch_size / np.sum(latencies), 2),
         "latency_50": np.quantile(latencies, 0.5),
         "latency_90": np.quantile(latencies, 0.9),
         "latency_95": np.quantile(latencies, 0.95),
