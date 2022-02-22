@@ -1,7 +1,7 @@
 from backends.ort import benchmark_ORT, profile_ORT
 from backends.torchscript import benchmark_Torchscript, profile_torchscript
 from backends.lightseq import benchmark_LightSeq, profile_LightSeq
-from backends.cv import benchmark_Eager, benchmark_TorchScript, benchmark_OFI, benchmark_CV_ORT
+from backends.cv import benchmark_CV_Eager, benchmark_CV_TorchScript, benchmark_CV_OFI, benchmark_CV_ORT
 from utils.utils import csv_writer
 import os
 import multiprocessing as mp
@@ -20,11 +20,11 @@ def run_worker(args):
                 benchmarks_list.append(benchmark_Torchscript(args.model_path, batch_size,sequence_length, args.backend, args.output_path, args.duration, num_threads=args.num_threads, gpu=args.gpu))
                 #csv_writer(benchmarks_list, args.backend, args.output_path)
             elif args.backend == 'cv_eager':
-                benchmarks_list.append(benchmark_Eager(args.model_path, batch_size, sequence_length, args.backend, args.output_path, args.duration, num_threads=args.num_threads, gpu=args.gpu))
+                benchmarks_list.append(benchmark_CV_Eager(args.model_path, batch_size, sequence_length, args.backend, args.output_path, args.duration, num_threads=args.num_threads, gpu=args.gpu))
             elif args.backend == 'cv_torchscript':
-                benchmarks_list.append(benchmark_TorchScript(args.model_path, batch_size, sequence_length, args.backend, args.output_path, args.duration, num_threads=args.num_threads, gpu=args.gpu))
+                benchmarks_list.append(benchmark_CV_TorchScript(args.model_path, batch_size, sequence_length, args.backend, args.output_path, args.duration, num_threads=args.num_threads, gpu=args.gpu))
             elif args.backend == 'cv_ofi':
-                benchmarks_list.append(benchmark_OFI(args.model_path, batch_size, sequence_length, args.backend, args.output_path, args.duration, num_threads=args.num_threads, gpu=args.gpu))
+                benchmarks_list.append(benchmark_CV_OFI(args.model_path, batch_size, sequence_length, args.backend, args.output_path, args.duration, num_threads=args.num_threads, gpu=args.gpu))
             elif args.backend == 'cv_ort':
                 benchmarks_list.append(benchmark_CV_ORT(args.model_path, batch_size, sequence_length, args.backend, args.output_path, args.duration, num_threads=args.num_threads, gpu=args.gpu))
             else:

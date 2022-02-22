@@ -25,7 +25,7 @@ import csv
 import multiprocessing as mp
 
 
-def benchmark_Eager(model_path, batch_size, sequence_length, backend, output_folder, duration, num_threads=-1, gpu=False):
+def benchmark_CV_Eager(model_path, batch_size, sequence_length, backend, output_folder, duration, num_threads=-1, gpu=False):
     if num_threads < 0:
         num_threads = mp.cpu_count()
 
@@ -74,7 +74,7 @@ def benchmark_Eager(model_path, batch_size, sequence_length, backend, output_fol
     return bechmark_metrics
     
 
-def benchmark_TorchScript(model_path, batch_size, sequence_length, backend, output_folder, duration, num_threads=-1, gpu=False):
+def benchmark_CV_TorchScript(model_path, batch_size, sequence_length, backend, output_folder, duration, num_threads=-1, gpu=False):
     if num_threads < 0:
         num_threads = mp.cpu_count()
 
@@ -122,7 +122,7 @@ def benchmark_TorchScript(model_path, batch_size, sequence_length, backend, outp
     }
     return bechmark_metrics
     
-def benchmark_OFI(model_path, batch_size, sequence_length, backend, output_folder, duration, num_threads=-1, gpu=False):
+def benchmark_CV_OFI(model_path, batch_size, sequence_length, backend, output_folder, duration, num_threads=-1, gpu=False):
     if num_threads < 0:
         num_threads = mp.cpu_count()
 
@@ -194,7 +194,7 @@ def benchmark_CV_ORT(model_path, batch_size, sequence_length, backend, output_fo
         _ = model.run(None, inputs)
     
     with torch.inference_mode():
-        while sum(latencies) < duration:
+        for _ in range(duration):
             start_time = perf_counter()
             _ = model.run(None, inputs)
             latency = (perf_counter() - start_time)*SEC_TO_MS_SCALE
