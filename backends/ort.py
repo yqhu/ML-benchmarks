@@ -39,7 +39,6 @@ def benchmark_ORT(model_path, batch_size,sequence_length, backend, output_folder
     model = onnxruntime.InferenceSession(model_path, sess_options=sess_options, providers=providers)   
 
     tokenizer = BertTokenizerFast.from_pretrained("bert-base-cased")
-    # model_inputs = tokenizer("My name is Bert", return_tensors="pt")
     dummy_inputs = get_dummy_inputs(
             batch_size=batch_size,
             seq_len=(sequence_length - tokenizer.num_special_tokens_to_add(pair=False)),tokenizer=tokenizer

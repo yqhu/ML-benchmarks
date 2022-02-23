@@ -53,30 +53,25 @@ if __name__ == '__main__':
     parser.add_argument('--num_threads', default=-1, type=int, help='The number of threads per worker. Default: -1 (no limitation)')
     parser.add_argument('--gpu', action='store_true', help='Use GPU. Default: Use CPU')
     parser.add_argument('--fp16', action='store_true', help='Use fp16 (GPU only). Default: Not use fp16')
+    parser.add_argument('--prefix', type=str, default='', help='Prefix string for output file name. Default: None')
     # Parse command line arguments
     args = parser.parse_args()
 
-    if args.profile and args.backend=='ort':
-        profile_ORT(args.model_path, args.batch_sizes[0],args.sequence_lengths[0], args.output_path)
-    elif args.profile and args.backend=='torchscript':
-        profile_torchscript(args.model_path, args.batch_sizes[0],args.sequence_lengths[0], args.output_path)
-    elif args.profile and args.backend=='lightseq':
-        profile_LightSeq(args.model_path, args.batch_sizes[0],args.sequence_lengths[0], args.output_path)
-    else:
-        args_repeats = [args] * args.num_workers
-        with mp.Pool(args.num_workers) as pool:
-            ret = pool.map(run_worker, args_repeats)
+    args_repeats = [args] * args.num_workers
+    with mp.Pool(args.num_workers) as pool:
+        ret = pool.map(run_worker, args_repeats)
 
-        df = pd.DataFrame(ret[0])
-        cols = df.columns[2:]
-        for r in ret[1:]:
-            df[cols] += pd.DataFrame(r)[cols]
+    df = pd.DataFrame(ret[0])
+    cols = df.columns[2:]
+    for r in ret[1:]:
+        df[cols] += pd.DataFrame(r)[cols]
 
-        cols = list(cols)
-        cols.remove('throughput')
-        df[cols] /= len(ret)
+    cols = list(cols)
+    cols.remove('throughput')
+    df[cols] /= len(ret)
 
-        gpu = '_gpu' if args.gpu else ''
-        fp16 = '_fp16' if args.fp16 else ''
-        file_name = os.path.join(args.output_path, f"resutls_{args.backend}{gpu}{fp16}.csv")
-        df.to_csv(file_name, index=False)
+    gpu = '_gpu' if args.gpu else ''
+    fp16 = '_fp16' if args.fp16 else ''
+    prefix = f'{args.prefix}-' if args.prefix else ''
+    file_name = os.path.join(args.output_path, f"{prefix}resutls_{args.backend}{gpu}{fp16}.csv")
+    df.to_csv(file_name, index=False)
