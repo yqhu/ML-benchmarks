@@ -24,7 +24,7 @@ import csv
 import multiprocessing as mp
 
 
-def benchmark_ORT(model_path, batch_size,sequence_length, backend, output_folder, duration=1000, num_threads=-1, gpu=False):
+def benchmark_ORT(model_path, batch_size,sequence_length, backend, output_folder, duration=1000, num_threads=-1, gpu=False, fp16=False):
     if num_threads < 0:
         num_threads = mp.cpu_count()
     sess_options = onnxruntime.SessionOptions()

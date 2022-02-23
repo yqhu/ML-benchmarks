@@ -6,18 +6,17 @@ import numpy as np
 from time import perf_counter
 import torch
 from backends.ort import benchmark_ORT
-from transformers import AutoModel, TensorType
+from transformers import AutoModel, TensorType, BertModel
 from utils.utils import get_dummy_inputs, get_dummy_inputs, csv_writer, SEC_TO_MS_SCALE
 import csv
 
-def benchmark_Torchscript(model_path, batch_size,sequence_length, backend, output_folder, duration, num_threads=-1, gpu=False):
+def benchmark_Eager(model_path, batch_size,sequence_length, backend, output_folder, duration, num_threads=-1, gpu=False, fp16=False):
     if num_threads > 0:
         torch.set_num_threads(num_threads)
 
     device = torch.device("cuda" if gpu else "cpu")
-    tokenizer = BertTokenizerFast.from_pretrained("bert-base-cased")
-    # model_inputs = tokenizer("My name is Bert", return_tensors="pt")
-    model = torch.jit.load(model_path, map_location=device)
+    tokenizer = BertTokenizerFast.from_pretrained(model_path)
+    model = BertModel.from_pretrained(model_path, torchscript=True).to(device)
     dummy_inputs = get_dummy_inputs(
             batch_size=batch_size,
             seq_len=(sequence_length - tokenizer.num_special_tokens_to_add(pair=False)),tokenizer=tokenizer
@@ -30,9 +29,67 @@ def benchmark_Torchscript(model_path, batch_size,sequence_length, backend, outpu
     )
     model_inputs = inputs
     latencies = []
-    # Warmup
+    
     input_ids = model_inputs["input_ids"].to(device)
     attention_mask = model_inputs["attention_mask"].to(device) 
+
+    if gpu and fp16:
+        model = model.half()
+        #input_ids = input_ids.half()
+        #attention_mask = attention_mask.half()
+
+    # Warmup
+    for _ in range(10):
+        _ = model(input_ids,attention_mask)
+    for _ in range(duration):
+        start_time = perf_counter()
+        _ = model(input_ids,attention_mask)
+        latency = (perf_counter() - start_time)*SEC_TO_MS_SCALE
+        latencies.append(latency)
+
+    print(f"******* batch_size = {batch_size}, sequence_length = {sequence_length}, {sum(latencies)} ms / {duration} iters")
+    bechmark_metrics={
+        "batchsize":batch_size,
+        "sequence_length": sequence_length,
+        "latency_mean": np.mean(latencies),
+        "latency_std": np.std(latencies),
+        "throughput":round(duration * batch_size * SEC_TO_MS_SCALE / np.sum(latencies), 2),
+        "latency_50": np.quantile(latencies, 0.5),
+        "latency_90": np.quantile(latencies, 0.9),
+        "latency_95": np.quantile(latencies, 0.95),
+        "latency_99": np.quantile(latencies, 0.99),
+        "latency_999": np.quantile(latencies, 0.999),
+    }
+    return bechmark_metrics
+
+def benchmark_Torchscript(model_path, batch_size,sequence_length, backend, output_folder, duration, num_threads=-1, gpu=False, fp16=False):
+    if num_threads > 0:
+        torch.set_num_threads(num_threads)
+
+    device = torch.device("cuda" if gpu else "cpu")
+    tokenizer = BertTokenizerFast.from_pretrained("bert-base-cased")
+    # model_inputs = tokenizer("My name is Bert", return_tensors="pt")
+    if not fp16:
+        model = torch.jit.load(model_path, map_location=device)
+    else:
+        model = torch.jit.load(model_path, map_location=device)
+    dummy_inputs = get_dummy_inputs(
+            batch_size=batch_size,
+            seq_len=(sequence_length - tokenizer.num_special_tokens_to_add(pair=False)),tokenizer=tokenizer
+        )
+
+    inputs = tokenizer(
+        dummy_inputs,
+        is_split_into_words=True,
+        return_tensors=TensorType.PYTORCH,
+    )
+    model_inputs = inputs
+    latencies = []
+    
+    input_ids = model_inputs["input_ids"].to(device)
+    attention_mask = model_inputs["attention_mask"].to(device) 
+
+    # Warmup
     for _ in range(10):
         _ = model(input_ids,attention_mask)
     for _ in range(duration):

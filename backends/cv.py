@@ -25,7 +25,7 @@ import csv
 import multiprocessing as mp
 
 
-def benchmark_CV_Eager(model_path, batch_size, sequence_length, backend, output_folder, duration, num_threads=-1, gpu=False):
+def benchmark_CV_Eager(model_path, batch_size, sequence_length, backend, output_folder, duration, num_threads=-1, gpu=False, fp16=False):
     if num_threads < 0:
         num_threads = mp.cpu_count()
 
@@ -40,6 +40,9 @@ def benchmark_CV_Eager(model_path, batch_size, sequence_length, backend, output_
         device = torch.device('cuda')
         model = model.to(device)
         inputs = inputs.to(device)
+        if fp16:
+            model = model.half()
+            inputs = inputs.half()
 
     latencies = []
 
@@ -74,7 +77,7 @@ def benchmark_CV_Eager(model_path, batch_size, sequence_length, backend, output_
     return bechmark_metrics
     
 
-def benchmark_CV_TorchScript(model_path, batch_size, sequence_length, backend, output_folder, duration, num_threads=-1, gpu=False):
+def benchmark_CV_TorchScript(model_path, batch_size, sequence_length, backend, output_folder, duration, num_threads=-1, gpu=False, fp16=False):
     if num_threads < 0:
         num_threads = mp.cpu_count()
 
@@ -89,6 +92,9 @@ def benchmark_CV_TorchScript(model_path, batch_size, sequence_length, backend, o
         device = torch.device('cuda')
         model = model.to(device)
         inputs = inputs.to(device)
+        if fp16:
+            model = model.half()
+            inputs = inputs.half()
 
     latencies = []
 
@@ -170,7 +176,7 @@ def benchmark_CV_OFI(model_path, batch_size, sequence_length, backend, output_fo
     }
     return bechmark_metrics
     
-def benchmark_CV_ORT(model_path, batch_size, sequence_length, backend, output_folder, duration, num_threads=-1, gpu=False):
+def benchmark_CV_ORT(model_path, batch_size, sequence_length, backend, output_folder, duration, num_threads=-1, gpu=False, fp16=False):
     if num_threads < 0:
         num_threads = mp.cpu_count()
 
@@ -185,6 +191,8 @@ def benchmark_CV_ORT(model_path, batch_size, sequence_length, backend, output_fo
     model = onnxruntime.InferenceSession(model_path, sess_options=sess_options, providers=providers)   
 
     inputs = torch.rand((batch_size, 3, sequence_length, sequence_length))
+    if fp16:
+        inputs = inputs.half()
     inputs = {'input': inputs.numpy()}
 
     latencies = []

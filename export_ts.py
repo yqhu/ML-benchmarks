@@ -36,3 +36,9 @@ model = BertModel.from_pretrained("bert-base-uncased", torchscript=True)
 traced_model = torch.jit.trace(model, [tokens_tensor, segments_tensors])
 torch.jit.save(traced_model, "model.pt")
 
+device = torch.device("cuda")
+model = BertModel.from_pretrained("bert-base-uncased", torchscript=True).to(device)
+model = model.half()
+
+traced_model = torch.jit.trace(model, [tokens_tensor.to(device), segments_tensors.to(device)])
+torch.jit.save(traced_model, "model_fp16.pt")

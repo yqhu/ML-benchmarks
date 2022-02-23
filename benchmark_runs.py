@@ -1,5 +1,5 @@
 from backends.ort import benchmark_ORT, profile_ORT
-from backends.torchscript import benchmark_Torchscript, profile_torchscript
+from backends.torchscript import benchmark_Torchscript, benchmark_Eager
 from backends.lightseq import benchmark_LightSeq, profile_LightSeq
 from backends.cv import benchmark_CV_Eager, benchmark_CV_TorchScript, benchmark_CV_OFI, benchmark_CV_ORT
 from utils.utils import csv_writer
@@ -14,19 +14,26 @@ def run_worker(args):
     for batch_size in args.batch_sizes:
         for sequence_length in args.sequence_lengths:
             if args.backend == 'ort':
-                benchmarks_list.append(benchmark_ORT(args.model_path, batch_size,sequence_length, args.backend, args.output_path, args.duration, num_threads=args.num_threads, gpu=args.gpu))
-                #csv_writer(benchmarks_list, args.backend, args.output_path)
+                benchmarks_list.append(benchmark_ORT(args.model_path, batch_size,sequence_length, args.backend, args.output_path, args.duration, 
+                num_threads=args.num_threads, gpu=args.gpu, fp16=args.fp16))
             elif args.backend == 'torchscript':
-                benchmarks_list.append(benchmark_Torchscript(args.model_path, batch_size,sequence_length, args.backend, args.output_path, args.duration, num_threads=args.num_threads, gpu=args.gpu))
-                #csv_writer(benchmarks_list, args.backend, args.output_path)
+                benchmarks_list.append(benchmark_Torchscript(args.model_path, batch_size,sequence_length, args.backend, args.output_path, args.duration, 
+                num_threads=args.num_threads, gpu=args.gpu, fp16=args.fp16))
+            elif args.backend == 'eager':
+                benchmarks_list.append(benchmark_Eager(args.model_path, batch_size,sequence_length, args.backend, args.output_path, args.duration, 
+                num_threads=args.num_threads, gpu=args.gpu, fp16=args.fp16))
             elif args.backend == 'cv_eager':
-                benchmarks_list.append(benchmark_CV_Eager(args.model_path, batch_size, sequence_length, args.backend, args.output_path, args.duration, num_threads=args.num_threads, gpu=args.gpu))
+                benchmarks_list.append(benchmark_CV_Eager(args.model_path, batch_size, sequence_length, args.backend, args.output_path, args.duration, 
+                num_threads=args.num_threads, gpu=args.gpu, fp16=args.fp16))
             elif args.backend == 'cv_torchscript':
-                benchmarks_list.append(benchmark_CV_TorchScript(args.model_path, batch_size, sequence_length, args.backend, args.output_path, args.duration, num_threads=args.num_threads, gpu=args.gpu))
+                benchmarks_list.append(benchmark_CV_TorchScript(args.model_path, batch_size, sequence_length, args.backend, args.output_path, args.duration, 
+                num_threads=args.num_threads, gpu=args.gpu, fp16=args.fp16))
             elif args.backend == 'cv_ofi':
-                benchmarks_list.append(benchmark_CV_OFI(args.model_path, batch_size, sequence_length, args.backend, args.output_path, args.duration, num_threads=args.num_threads, gpu=args.gpu))
+                benchmarks_list.append(benchmark_CV_OFI(args.model_path, batch_size, sequence_length, args.backend, args.output_path, args.duration, 
+                num_threads=args.num_threads, gpu=args.gpu))
             elif args.backend == 'cv_ort':
-                benchmarks_list.append(benchmark_CV_ORT(args.model_path, batch_size, sequence_length, args.backend, args.output_path, args.duration, num_threads=args.num_threads, gpu=args.gpu))
+                benchmarks_list.append(benchmark_CV_ORT(args.model_path, batch_size, sequence_length, args.backend, args.output_path, args.duration, 
+                num_threads=args.num_threads, gpu=args.gpu, fp16=args.fp16))
             else:
                 pass
 
@@ -45,6 +52,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_workers', default=1, type=int, help='The number of concurrent workers. Default: 1')
     parser.add_argument('--num_threads', default=-1, type=int, help='The number of threads per worker. Default: -1 (no limitation)')
     parser.add_argument('--gpu', action='store_true', help='Use GPU. Default: Use CPU')
+    parser.add_argument('--fp16', action='store_true', help='Use fp16 (GPU only). Default: Not use fp16')
     # Parse command line arguments
     args = parser.parse_args()
 
@@ -69,5 +77,6 @@ if __name__ == '__main__':
         df[cols] /= len(ret)
 
         gpu = '_gpu' if args.gpu else ''
-        file_name = os.path.join(args.output_path, f"resutls_{args.backend}{gpu}.csv")
+        fp16 = '_fp16' if args.fp16 else ''
+        file_name = os.path.join(args.output_path, f"resutls_{args.backend}{gpu}{fp16}.csv")
         df.to_csv(file_name, index=False)
