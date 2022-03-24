@@ -8,6 +8,7 @@ Transformer examples are based on https://huggingface.co/docs/transformers/seria
 ## Prepare ONNX model
 
     python -m transformers.onnx --model=bert-base-uncased .
+    python -m transformers.convert_graph_to_onnx --framework pt --model bert-base-uncased --quantize model_int8.onnx
     python -m onnxruntime.transformers.optimizer --input model.onnx --output model_fp16.onnx --float16 --opt_level 1 --model_type bert --use_gpu
 
 ## Prepare TorchScript model
