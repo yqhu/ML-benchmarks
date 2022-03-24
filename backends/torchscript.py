@@ -10,13 +10,15 @@ from transformers import AutoModel, TensorType, BertModel
 from utils.utils import get_dummy_inputs, get_dummy_inputs, csv_writer, SEC_TO_MS_SCALE
 import csv
 
-def benchmark_Eager(model_path, batch_size,sequence_length, backend, output_folder, duration, num_threads=-1, gpu=False, fp16=False):
+def benchmark_Eager(model_path, batch_size,sequence_length, backend, output_folder, duration, num_threads=-1, gpu=False, fp16=False, int8=False):
     if num_threads > 0:
         torch.set_num_threads(num_threads)
 
     device = torch.device("cuda" if gpu else "cpu")
     tokenizer = BertTokenizerFast.from_pretrained(model_path)
     model = BertModel.from_pretrained(model_path, torchscript=True).to(device)
+    if int8:
+        model = torch.quantization.quantize_dynamic(model, {torch.nn.Linear}, dtype=torch.qint8)
     dummy_inputs = get_dummy_inputs(
             batch_size=batch_size,
             seq_len=(sequence_length - tokenizer.num_special_tokens_to_add(pair=False)),tokenizer=tokenizer

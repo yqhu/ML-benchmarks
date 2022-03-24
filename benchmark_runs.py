@@ -21,7 +21,7 @@ def run_worker(args):
                 num_threads=args.num_threads, gpu=args.gpu, fp16=args.fp16))
             elif args.backend == 'eager':
                 benchmarks_list.append(benchmark_Eager(args.model_path, batch_size,sequence_length, args.backend, args.output_path, args.duration, 
-                num_threads=args.num_threads, gpu=args.gpu, fp16=args.fp16))
+                num_threads=args.num_threads, gpu=args.gpu, fp16=args.fp16, int8=args.int8))
             elif args.backend == 'cv_eager':
                 benchmarks_list.append(benchmark_CV_Eager(args.model_path, batch_size, sequence_length, args.backend, args.output_path, args.duration, 
                 num_threads=args.num_threads, gpu=args.gpu, fp16=args.fp16))
@@ -53,6 +53,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_threads', default=-1, type=int, help='The number of threads per worker. Default: -1 (no limitation)')
     parser.add_argument('--gpu', action='store_true', help='Use GPU. Default: Use CPU')
     parser.add_argument('--fp16', action='store_true', help='Use fp16 (GPU only). Default: Not use fp16')
+    parser.add_argument('--int8', action='store_true', help='Quantization to int8 (CPU only).  Default: No quantization')
     parser.add_argument('--prefix', type=str, default='', help='Prefix string for output file name. Default: None')
     # Parse command line arguments
     args = parser.parse_args()
@@ -72,6 +73,7 @@ if __name__ == '__main__':
 
     gpu = '_gpu' if args.gpu else ''
     fp16 = '_fp16' if args.fp16 else ''
+    int8 = '_int8' if args.int8 else ''
     prefix = f'{args.prefix}-' if args.prefix else ''
-    file_name = os.path.join(args.output_path, f"{prefix}resutls_{args.backend}{gpu}{fp16}.csv")
+    file_name = os.path.join(args.output_path, f"{prefix}resutls_{args.backend}_worker{args.num_workers}_thread{args.num_threads}{gpu}{fp16}{int8}.csv")
     df.to_csv(file_name, index=False)
