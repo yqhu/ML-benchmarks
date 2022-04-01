@@ -8,5 +8,6 @@ do
 
     python benchmark_runs.py --model_path cv_eager.pt --backend cv_eager --output_path . --batch_sizes 1 2 4 8 12 16 32 64 --sequence_lengths 64 128 224 --num_threads $THREAD --prefix $PREFIX
     python benchmark_runs.py --model_path cv_ts.pt --backend cv_torchscript --output_path . --batch_sizes 1 2 4 8 12 16 32 64 --sequence_lengths 64 128 224 --num_threads $THREAD --prefix $PREFIX
+    python benchmark_runs.py --model_path cv_ts.pt --backend cv_ofi --output_path . --batch_sizes 1 2 4 8 12 16 32 64 --sequence_lengths 64 128 224 --num_threads $THREAD --prefix $PREFIX
     python benchmark_runs.py --model_path cv_onnx.onnx --backend cv_ort --output_path . --batch_sizes 1 2 4 8 12 16 32 64 --sequence_lengths 64 128 224 --num_threads $THREAD --prefix $PREFIX
 done

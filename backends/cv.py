@@ -132,7 +132,7 @@ def benchmark_CV_TorchScript(model_path, batch_size, sequence_length, backend, o
     }
     return bechmark_metrics
     
-def benchmark_CV_OFI(model_path, batch_size, sequence_length, backend, output_folder, duration, num_threads=-1, gpu=False):
+def benchmark_CV_OFI(model_path, batch_size, sequence_length, backend, output_folder, duration, num_threads=-1, gpu=False, fp16=False, int8=False):
     if num_threads < 0:
         num_threads = mp.cpu_count()
 
@@ -140,6 +140,8 @@ def benchmark_CV_OFI(model_path, batch_size, sequence_length, backend, output_fo
 
     model = torch.jit.load(model_path)
     model = torch.jit.optimize_for_inference(model.eval())
+    if int8:
+        model = torch.quantization.quantize_dynamic(model, qconfig_spec={torch.nn.Linear}, dtype=torch.qint8)
 
     inputs = torch.rand((batch_size, 3, sequence_length, sequence_length))
 

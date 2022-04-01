@@ -30,7 +30,7 @@ def run_worker(args):
                 num_threads=args.num_threads, gpu=args.gpu, fp16=args.fp16, int8=args.int8))
             elif args.backend == 'cv_ofi':
                 benchmarks_list.append(benchmark_CV_OFI(args.model_path, batch_size, sequence_length, args.backend, args.output_path, args.duration, 
-                num_threads=args.num_threads, gpu=args.gpu))
+                num_threads=args.num_threads, gpu=args.gpu, fp16=args.fp16, int8=args.int8))
             elif args.backend == 'cv_ort':
                 benchmarks_list.append(benchmark_CV_ORT(args.model_path, batch_size, sequence_length, args.backend, args.output_path, args.duration, 
                 num_threads=args.num_threads, gpu=args.gpu, fp16=args.fp16))
