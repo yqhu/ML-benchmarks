@@ -36,6 +36,10 @@ model = BertModel.from_pretrained("bert-base-uncased", torchscript=True)
 traced_model = torch.jit.trace(model, [tokens_tensor, segments_tensors])
 torch.jit.save(traced_model, "model.pt")
 
+# Quantization
+quantized_model = torch.quantization.quantize_dynamic(model, {torch.nn.Linear}, dtype=torch.qint8)
+torch.save(quantized_model, 'model_int8.pt')
+
 device = torch.device("cuda")
 model = BertModel.from_pretrained("bert-base-uncased", torchscript=True).to(device)
 model = model.half()

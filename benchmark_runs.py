@@ -18,16 +18,16 @@ def run_worker(args):
                 num_threads=args.num_threads, gpu=args.gpu, fp16=args.fp16))
             elif args.backend == 'torchscript':
                 benchmarks_list.append(benchmark_Torchscript(args.model_path, batch_size,sequence_length, args.backend, args.output_path, args.duration, 
-                num_threads=args.num_threads, gpu=args.gpu, fp16=args.fp16))
+                num_threads=args.num_threads, gpu=args.gpu, fp16=args.fp16, int8=args.int8))
             elif args.backend == 'eager':
                 benchmarks_list.append(benchmark_Eager(args.model_path, batch_size,sequence_length, args.backend, args.output_path, args.duration, 
                 num_threads=args.num_threads, gpu=args.gpu, fp16=args.fp16, int8=args.int8))
             elif args.backend == 'cv_eager':
                 benchmarks_list.append(benchmark_CV_Eager(args.model_path, batch_size, sequence_length, args.backend, args.output_path, args.duration, 
-                num_threads=args.num_threads, gpu=args.gpu, fp16=args.fp16))
+                num_threads=args.num_threads, gpu=args.gpu, fp16=args.fp16, int8=args.int8))
             elif args.backend == 'cv_torchscript':
                 benchmarks_list.append(benchmark_CV_TorchScript(args.model_path, batch_size, sequence_length, args.backend, args.output_path, args.duration, 
-                num_threads=args.num_threads, gpu=args.gpu, fp16=args.fp16))
+                num_threads=args.num_threads, gpu=args.gpu, fp16=args.fp16, int8=args.int8))
             elif args.backend == 'cv_ofi':
                 benchmarks_list.append(benchmark_CV_OFI(args.model_path, batch_size, sequence_length, args.backend, args.output_path, args.duration, 
                 num_threads=args.num_threads, gpu=args.gpu))

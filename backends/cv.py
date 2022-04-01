@@ -25,13 +25,15 @@ import csv
 import multiprocessing as mp
 
 
-def benchmark_CV_Eager(model_path, batch_size, sequence_length, backend, output_folder, duration, num_threads=-1, gpu=False, fp16=False):
+def benchmark_CV_Eager(model_path, batch_size, sequence_length, backend, output_folder, duration, num_threads=-1, gpu=False, fp16=False, int8=False):
     if num_threads < 0:
         num_threads = mp.cpu_count()
 
     torch.set_num_threads(num_threads)
 
     model = torch.load(model_path)
+    if int8:
+        model = torch.quantization.quantize_dynamic(model, qconfig_spec={torch.nn.Linear}, dtype=torch.qint8)
     model.eval()
 
     inputs = torch.rand((batch_size, 3, sequence_length, sequence_length))
@@ -77,13 +79,15 @@ def benchmark_CV_Eager(model_path, batch_size, sequence_length, backend, output_
     return bechmark_metrics
     
 
-def benchmark_CV_TorchScript(model_path, batch_size, sequence_length, backend, output_folder, duration, num_threads=-1, gpu=False, fp16=False):
+def benchmark_CV_TorchScript(model_path, batch_size, sequence_length, backend, output_folder, duration, num_threads=-1, gpu=False, fp16=False, int8=False):
     if num_threads < 0:
         num_threads = mp.cpu_count()
 
     torch.set_num_threads(num_threads)
 
     model = torch.jit.load(model_path)
+    if int8:
+        model = torch.quantization.quantize_dynamic(model, qconfig_spec={torch.nn.Linear}, dtype=torch.qint8)
     model.eval()
 
     inputs = torch.rand((batch_size, 3, sequence_length, sequence_length))

@@ -1,5 +1,8 @@
 import torch
 import torchvision
+import onnx
+from onnxruntime.quantization import QuantizationMode, quantize
+
 
 model = torchvision.models.resnet50()
 
@@ -7,6 +10,9 @@ model = torchvision.models.resnet50()
 model.eval()
 
 torch.save(model, 'cv_eager.pt')
+
+quantized_model = torch.quantization.quantize_dynamic(model, qconfig_spec={torch.nn.Linear}, dtype=torch.qint8)
+torch.save(model, 'cv_eager_int8.pt')
 
 traced_model = torch.jit.script(model)
 torch.jit.save(traced_model, "cv_ts.pt")
@@ -26,6 +32,17 @@ torch.onnx.export(model,               # model being run
                   output_names = ['output'], # the model's output names
                   dynamic_axes={'input' : {0 : 'batch_size', 2 : 'height', 3 : 'width'},    # variable length axes
                                 'output' : {0 : 'batch_size'}})
+
+onnx_model = onnx.load('cv_onnx.onnx')
+
+quantized_model = quantize(
+        model=onnx_model,
+        quantization_mode=QuantizationMode.IntegerOps,
+        force_fusions=True,
+        symmetric_weight=True,
+    )
+
+onnx.save_model(quantized_model, 'cv_onnx_int8.onnx')
 
 model = model.cuda().half()
 x = x.cuda().half()

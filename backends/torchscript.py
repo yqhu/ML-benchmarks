@@ -64,7 +64,7 @@ def benchmark_Eager(model_path, batch_size,sequence_length, backend, output_fold
     }
     return bechmark_metrics
 
-def benchmark_Torchscript(model_path, batch_size,sequence_length, backend, output_folder, duration, num_threads=-1, gpu=False, fp16=False):
+def benchmark_Torchscript(model_path, batch_size,sequence_length, backend, output_folder, duration, num_threads=-1, gpu=False, fp16=False, int8=False):
     if num_threads > 0:
         torch.set_num_threads(num_threads)
 
@@ -75,6 +75,8 @@ def benchmark_Torchscript(model_path, batch_size,sequence_length, backend, outpu
         model = torch.jit.load(model_path, map_location=device)
     else:
         model = torch.jit.load(model_path, map_location=device)
+    if int8:
+        model = torch.quantization.quantize_dynamic(model, {torch.nn.Linear}, dtype=torch.qint8)
     dummy_inputs = get_dummy_inputs(
             batch_size=batch_size,
             seq_len=(sequence_length - tokenizer.num_special_tokens_to_add(pair=False)),tokenizer=tokenizer
